@@ -1,6 +1,7 @@
 from __future__ import annotations
 import random
 import numpy as np
+import torch
 
 from obelix import OBELIX
 
@@ -83,24 +84,30 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
             next_action = get_epsilon_greedy_action(next_stateID, next_epsilon)
             
             td_error = reward + gamma * agent.q_table[next_stateID, next_action] - agent.q_table[stateID, action]
-            agent.e_table[stateID, action] += 1
-            
-            agent.q_table += alpha * td_error * agent.e_table
-            agent.e_table *= gamma * lambda_
+            agent.e_table[stateID, action] = 1
+
+            active_s, active_a = np.nonzero(agent.e_table)   
+                     
+            agent.q_table[active_s, active_a] += alpha * td_error * agent.e_table[active_s, active_a]
+            agent.e_table[active_s, active_a] *= gamma * lambda_
+
+            # agent.e_table[agent.e_table < 1e-4] = 0.0
             
             stateID = next_stateID
             action = next_action
             episode_return += reward
             
             if done:
-                break
+                td_error = reward - agent.q_table[stateID, action]
+            else:
+                td_error = reward + gamma * agent.q_table[next_stateID, next_action] - agent.q_table[stateID, action]
         
         if (episode + 1) % 50 == 0:
             print(f"Episode {episode+1}/{episodes} return={episode_return:.1f} eps={epsilon:.3f} replay={len(replay)}")
     
     os.makedirs("models", exist_ok=True)
     out_path = f"models/sarsa_lambda_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
-    torch.save(agent.q_table, out_path)
+    torch.save(torch.from_numpy(agent.q_table), out_path)
     print(f"Saved Q-table to {out_path}")
 
 _Q_TABLE = None
@@ -108,12 +115,14 @@ _Q_TABLE = None
 def _load_once(level: int, wall_obstacles: bool):
     global _Q_TABLE
     if _Q_TABLE is None:
-        _Q_TABLE = np.load(f"models/sarsa_lambda_level{level}{'_wall' if wall_obstacles else ''}_weights.pth")
+        wpath = f"models/sarsa_lambda_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
+        _Q_TABLE = torch.load(wpath, map_location="cpu", weights_only=True).numpy()
     return _Q_TABLE
     
-def policy(obs: np.ndarray, rng: np.random.Generator, level: int=1, wall_obstacles: bool=False) -> int:
+def policy(obs: np.ndarray, rng: np.random.Generator, level: int=1, wall_obstacles: bool=False) -> str:
     _load_once(level, wall_obstacles)
     stateID = obs_to_state(obs)
-    return np.argmax(_Q_TABLE[stateID])
+    best_action_idx = int(np.argmax(_Q_TABLE[stateID]))
+    return ACTIONS[best_action_idx]
 
     
