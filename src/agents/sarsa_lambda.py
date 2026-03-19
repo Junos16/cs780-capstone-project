@@ -103,8 +103,7 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
             else:
                 td_error = reward + gamma * agent.q_table[next_stateID, next_action] - agent.q_table[stateID, action]
         
-        if (episode + 1) % 10 == 0:
-            print(f"Episode {episode+1}/{episodes} return={episode_return:.1f} eps={epsilon:.3f}")
+        print(f"Episode {episode+1}/{episodes} return={episode_return:.1f} eps={epsilon:.3f}")
     
     os.makedirs("models", exist_ok=True)
     out_path = f"models/sarsa_lambda_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
