@@ -5,7 +5,7 @@ import json
 import numpy as np
 import torch
 
-from src.obelix import OBELIX
+from obelix import OBELIX
 
 ACTIONS = ["L45", "L22", "FW", "R22", "R45"]
 STATE_SPACE_SIZE = 2**18
