@@ -4,6 +4,7 @@ import os
 import sys
 
 from evaluate import evaluate_agent, append_leaderboard
+from optuna import run_sweep
 
 def load_agent_module(agent_name: str):
     """Dynamically loads an agent module from src/agents/ for training"""
@@ -31,6 +32,27 @@ def load_submission_module(submission_dir: str):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+def sweep_agent(args):
+    agent_mod = load_agent_module(args.agent)
+    
+    if not hasattr(agent_mod, "train") or not hasattr(agent_mod, "policy"):
+        print(f"Error: {args.agent}.py must define both 'train' and 'policy' functions.")
+        sys.exit(1)
+        
+    if not hasattr(agent_mod, "get_optuna_params"):
+        print(f"Error: {args.agent}.py must define 'get_optuna_params(trial, total_episodes)'.")
+        sys.exit(1)
+        
+    run_sweep(
+        agent_name=args.agent,
+        agent_mod=agent_mod,
+        get_params_fn=agent_mod.get_optuna_params, # Pass the function dynamically
+        level=args.level,
+        wall_obstacles=args.wall,
+        episodes=args.episodes,
+        n_trials=args.trials
+    )
 
 def train_agent(args):
     print(f"Training agent '{args.agent}' on level {args.level} with wall_obstacles={args.wall}")
@@ -80,6 +102,14 @@ def main():
     parser = argparse.ArgumentParser(description="OBELIX RL Agent Trainer & Evaluator")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    # Optuna Sweep parser
+    sweep_parser = subparsers.add_parser("sweep", help="Run Optuna hyperparameter sweep")
+    sweep_parser.add_argument("--agent", type=str, required=True, help="Name of the agent file in src/agents/ (without .py)")
+    sweep_parser.add_argument("--level", type=int, choices=[1, 2, 3], default=1, help="Difficulty level")
+    sweep_parser.add_argument("--wall", action="store_true", help="Enable the static wall obstacle")
+    sweep_parser.add_argument("--episodes", type=int, default=300, help="Number of episodes per trial")
+    sweep_parser.add_argument("--trials", type=int, default=30, help="Number of Optuna trials to run")
+
     # Training parser
     train_parser = subparsers.add_parser("train", help="Train an RL agent")
     train_parser.add_argument("--agent", type=str, required=True, help="Name of the agent file in src/agents/ (without .py)")
@@ -97,7 +127,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.command == "train":
+    if args.command == "sweep":
+        sweep_agent(args)
+    elif args.command == "train":
         train_agent(args)
     elif args.command == "eval":
         eval_agent(args)

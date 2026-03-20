@@ -125,4 +125,11 @@ def policy(obs: np.ndarray, rng: np.random.Generator, level: int=1, wall_obstacl
     best_action_idx = int(np.argmax(_Q_TABLE[stateID]))
     return ACTIONS[best_action_idx]
 
-    
+def get_optuna_params(trial, total_episodes):
+    params = {}
+    params["gamma"] = trial.suggest_float("gamma", 0.9, 1.0)
+    params["alpha"] = trial.suggest_float("alpha", 0.01, 0.5, log=True)
+    params["lambda_"] = trial.suggest_float("lambda_", 0.5, 0.99)
+    eps_fraction = trial.suggest_float("eps_decay_fraction", 0.4, 0.9)
+    params["eps_decay_episodes"] = int(total_episodes * eps_fraction)
+    return params    

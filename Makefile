@@ -5,12 +5,17 @@ LEVEL ?= 1
 EPISODES ?= 100
 WALL ?= ""
 CONFIG ?= ""
+TRIALS ?= 30
 
 # Check if flags are provided to append them
 WALL_FLAG = $(if $(filter-out "",$(WALL)),--wall,)
 CONFIG_FLAG = $(if $(filter-out "",$(CONFIG)),--config $(CONFIG),)
 
-.PHONY: train eval submit help
+.PHONY: sweep train eval submit help
+
+## Sweep an agent
+sweep:
+	uv run src/main.py sweep --agent $(AGENT) --level $(LEVEL) --episodes $(EPISODES) --trials $(TRIALS) $(WALL_FLAG)
 
 ## Train an agent
 train:
@@ -28,6 +33,9 @@ submit:
 
 help:
 	@echo "Usage:"
+	@echo "  make sweep [AGENT=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1] [TRIALS=N]"
+	@echo "    Example: make sweep AGENT=sarsa_lambda LEVEL=1 EPISODES=300 TRIALS=30 WALL=1"
+	@echo ""
 	@echo "  make train [AGENT=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1] [CONFIG=path/to/json]"
 	@echo "    Example: make train AGENT=ddqn LEVEL=2 EPISODES=1000 CONFIG=submissions/configs/1.ddqn_provided_sample.json"
 	@echo ""

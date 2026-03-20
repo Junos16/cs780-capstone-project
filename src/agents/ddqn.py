@@ -100,22 +100,6 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
     box_speed = config["box_speed"]
     difficulty = 0 if level == 1 else 2 if level == 2 else 3
 
-    # Hardcoded hyperparameters from the original script
-    gamma = 0.99
-    lr = 1e-3
-    batch_size = 256
-    replay_size = 100000
-    warmup = 2000
-    target_sync = 2000
-    eps_start = 1.0
-    eps_end = 0.05
-    eps_decay_steps = 200000
-    seed = 42
-    max_steps = 1000
-    scaling_factor = 5
-    arena_size = 500
-    box_speed = 2
-
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -231,3 +215,17 @@ def policy(obs: np.ndarray, rng: np.random.Generator, level: int=1, wall_obstacl
         logits = _MODEL(x).squeeze(0).numpy()
 
     return ACTIONS[int(np.argmax(logits))]
+
+def get_optuna_params(trial, total_episodes):
+    params = {}
+    params["gamma"] = trial.suggest_float("gamma", 0.9, 1.0)
+    params["lr"] = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
+    params["batch_size"] = trial.suggest_categorical("batch_size", [64, 128, 256, 512])
+    params["replay_size"] = trial.suggest_categorical("replay_size", [10000, 50000, 100000, 200000])
+    params["warmup"] = trial.suggest_categorical("warmup", [1000, 2000, 5000])
+    params["target_sync"] = trial.suggest_categorical("target_sync", [1000, 2000, 5000])
+    params["eps_start"] = trial.suggest_float("eps_start", 0.5, 1.0)
+    params["eps_end"] = trial.suggest_float("eps_end", 0.01, 0.1)
+    eps_fraction = trial.suggest_float("eps_decay_fraction", 0.4, 0.9)
+    params["eps_decay_steps"] = int(total_episodes * eps_fraction)
+    return params
