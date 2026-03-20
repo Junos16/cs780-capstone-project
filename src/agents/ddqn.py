@@ -54,7 +54,7 @@ class Replay:
 
 import json
 
-def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None):
+def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False):
     """
     Standardized train function called by src/main.py
     """
@@ -141,7 +141,7 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
                     qs = q(torch.tensor(s, dtype=torch.float32).unsqueeze(0)).squeeze(0).numpy()
                 a = int(np.argmax(qs))
 
-            s2, r, done = env.step(ACTIONS[a], render=False)
+            s2, r, done = env.step(ACTIONS[a], render=render)
             ep_ret += float(r)
             replay.add(Transition(s=s, a=a, r=float(r), s2=s2, done=bool(done)))
             s = s2

@@ -22,7 +22,7 @@ class SarsaLambdaAgent:
 def obs_to_state(obs: np.ndarray) -> int:
     return np.sum(2**np.where(obs > 0)[0])
 
-def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None):
+def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False):
     print("Training SARSA-Lambda agent for level", level, "with wall obstacles", wall_obstacles, "for", episodes, "episodes")
     difficulty = 0 if level == 1 else 1 if level == 2 else 2 if level == 3 else 3
     
@@ -79,32 +79,46 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
 
         agent.reset_traces()
         episode_return = 0.0
+        
+        agent.reset_traces()
+        episode_return = 0.0
+        
+        active_traces = set()
 
         for _ in range(config["max_steps"]):
-            next_obs, reward, done = env.step(ACTIONS[action], render=False)
+            #next_obs, reward, done = env.step(ACTIONS[action], render=False)
+            next_obs, reward, done = env.step(ACTIONS[action], render=render)
             next_stateID = obs_to_state(next_obs)
             next_epsilon = max(config["eps_end"], config["eps_start"] - episode / config["eps_decay_episodes"])
             next_action = get_epsilon_greedy_action(next_stateID, next_epsilon)
             
-            td_error = reward + gamma * agent.q_table[next_stateID, next_action] - agent.q_table[stateID, action]
-            agent.e_table[stateID, action] = 1
+            if done:
+                td_error = reward - agent.q_table[stateID, action]
+            else:
+                td_error = reward + gamma * agent.q_table[next_stateID, next_action] - agent.q_table[stateID, action]
+            
+            agent.e_table[stateID, action] = 1.0
+            active_traces.add((stateID, action))
 
-            active_s, active_a = np.nonzero(agent.e_table)   
-                     
-            agent.q_table[active_s, active_a] += alpha * td_error * agent.e_table[active_s, active_a]
-            agent.e_table[active_s, active_a] *= gamma * lambda_
-
-            # agent.e_table[agent.e_table < 1e-4] = 0.0
+            traces_to_remove = []
+            for s, a in active_traces:
+                agent.q_table[s, a] += alpha * td_error * agent.e_table[s, a]
+                agent.e_table[s, a] *= gamma * lambda_
+                
+                if agent.e_table[s, a] < 1e-4:
+                    agent.e_table[s, a] = 0.0
+                    traces_to_remove.append((s, a))
+            
+            for s, a in traces_to_remove:
+                active_traces.remove((s, a))
             
             stateID = next_stateID
             action = next_action
             episode_return += reward
             
             if done:
-                td_error = reward - agent.q_table[stateID, action]
-            else:
-                td_error = reward + gamma * agent.q_table[next_stateID, next_action] - agent.q_table[stateID, action]
-        
+                break
+
         print(f"Episode {episode+1}/{episodes} return={episode_return:.1f} eps={epsilon:.3f}")
     
     os.makedirs("models", exist_ok=True)

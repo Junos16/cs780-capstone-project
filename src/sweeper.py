@@ -7,7 +7,7 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 from evaluate import evaluate_agent
 
-def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episodes, n_trials):
+def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episodes, n_trials, render=False):
     os.makedirs("models", exist_ok=True)
     os.makedirs("submissions/configs/temp", exist_ok=True)
 
@@ -24,7 +24,8 @@ def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episo
             level=level, 
             wall_obstacles=wall_obstacles, 
             episodes=episodes, 
-            config_file=config_path
+            config_file=config_path,
+            render=render
         )
         
         # Evaluate

@@ -51,7 +51,8 @@ def sweep_agent(args):
         level=args.level,
         wall_obstacles=args.wall,
         episodes=args.episodes,
-        n_trials=args.trials
+        n_trials=args.trials,
+        render=args.render
     )
 
 def train_agent(args):
@@ -60,7 +61,7 @@ def train_agent(args):
     
     if hasattr(agent_mod, "train"):
         # We expect the agent module to have a train() function
-        agent_mod.train(level=args.level, wall_obstacles=args.wall, episodes=args.episodes, config_file=args.config)
+        agent_mod.train(level=args.level, wall_obstacles=args.wall, episodes=args.episodes, config_file=args.config, render=args.render)
     else:
         print(f"Error: {args.agent}.py does not define a 'train' function.")
         print("Please implement 'def train(level, wall_obstacles, episodes):' in your agent file.")
@@ -109,6 +110,7 @@ def main():
     sweep_parser.add_argument("--wall", action="store_true", help="Enable the static wall obstacle")
     sweep_parser.add_argument("--episodes", type=int, default=300, help="Number of episodes per trial")
     sweep_parser.add_argument("--trials", type=int, default=30, help="Number of Optuna trials to run")
+    sweep_parser.add_argument("--render", action="store_true", help="Render the environment during the sweep")
 
     # Training parser
     train_parser = subparsers.add_parser("train", help="Train an RL agent")
@@ -117,6 +119,7 @@ def main():
     train_parser.add_argument("--wall", action="store_true", help="Enable the static wall obstacle")
     train_parser.add_argument("--episodes", type=int, default=1000, help="Number of episodes to train")
     train_parser.add_argument("--config", type=str, default=None, help="Path to config JSON file (e.g., submissions/configs/...)")
+    train_parser.add_argument("--render", action="store_true", help="Render the environment during training")
 
     # Evaluation parser
     eval_parser = subparsers.add_parser("eval", help="Evaluate a packaged submission")
