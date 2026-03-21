@@ -10,6 +10,10 @@ from obelix import OBELIX
 ACTIONS = ["L45", "L22", "FW", "R22", "R45"]
 N_FEATURES = 18 
 
+_CURRENT_LEVEL = 1
+_CURRENT_WALL = False
+_LINUCB_STATE = None
+
 class LinUCBAgent:
     def __init__(self, n_actions=5, n_features=18):
         self.n_actions = n_actions
@@ -22,6 +26,11 @@ class LinUCBAgent:
         self.b = np.zeros((n_actions, n_features, 1), dtype=np.float32)
 
 def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False):
+    global _CURRENT_LEVEL, _CURRENT_WALL, _LINUCB_STATE
+    _CURRENT_LEVEL = level
+    _CURRENT_WALL = wall_obstacles
+    _LINUCB_STATE = None
+    
     print("Training LinUCB agent for level", level, "with wall obstacles", wall_obstacles, "for", episodes, "episodes")
     difficulty = 0 if level == 1 else 1 if level == 2 else 2 if level == 3 else 3
     
@@ -90,7 +99,7 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
             print(f"Episode {episode+1}/{episodes} return={episode_return:.1f}")
     
     os.makedirs("models", exist_ok=True)
-    out_path = f"models/linucb_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
+    out_path = f"models/linUCB_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
     
     state_dict = {
         "A": torch.from_numpy(agent.A),
@@ -101,19 +110,19 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
 
 _LINUCB_STATE = None
 
-def _load_once(level: int, wall_obstacles: bool):
+def _load_once():
     global _LINUCB_STATE
     if _LINUCB_STATE is None:
-        wpath = f"models/linucb_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
-        loaded = torch.load(wpath, map_location="cpu", weights_only=True)
+        wpath = f"models/linUCB_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}_weights.pth"
+        loaded = torch.load(wpath, map_location="cpu", weights_only=True).numpy()
         _LINUCB_STATE = {
             "A": loaded["A"].numpy(),
             "b": loaded["b"].numpy()
         }
     return _LINUCB_STATE
     
-def policy(obs: np.ndarray, rng: np.random.Generator, level: int=1, wall_obstacles: bool=False) -> str:
-    state = _load_once(level, wall_obstacles)
+def policy(obs: np.ndarray, rng: np.random.Generator) -> str:
+    state = _load_once()
     
     x_t = np.append(obs, 1.0).reshape(-1, 1).astype(np.float32)
     expected_rewards = np.zeros(len(ACTIONS))

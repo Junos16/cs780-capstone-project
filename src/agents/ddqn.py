@@ -13,6 +13,9 @@ import torch.optim as optim
 from src.obelix import OBELIX
 
 ACTIONS = ["L45", "L22", "FW", "R22", "R45"]
+_CURRENT_LEVEL = 1
+_CURRENT_WALL = False
+_MODEL = None
 
 class DQN(nn.Module):
     def __init__(self, in_dim=18, n_actions=5):
@@ -58,6 +61,11 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
     """
     Standardized train function called by src/main.py
     """
+    global _CURRENT_LEVEL, _CURRENT_WALL, _MODEL
+    _CURRENT_LEVEL = level
+    _CURRENT_WALL = wall_obstacles
+    _MODEL = None
+    
     difficulty = 0 if level == 1 else 2 if level == 2 else 3
 
     # Default hyperparameters
@@ -187,14 +195,14 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
 
 _MODEL = None
 
-def _load_once(level, wall_obstacles):
+def _load_once():
     global _MODEL
     if _MODEL is not None:
         return
 
     # Look for weights using the standard naming convention set by our train logic above
     # Note: For Codabench submissions, this logic needs to be simplified to just target 'weights.pth'
-    wpath = f"models/ddqn_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
+    wpath = f"models/ddqn_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}_weights.pth"
 
     if not os.path.exists(wpath):
         raise FileNotFoundError(f"Missing weights file at {wpath}. Train the agent first.")
@@ -205,9 +213,9 @@ def _load_once(level, wall_obstacles):
 
     _MODEL = model
 
-def policy(obs: np.ndarray, rng: np.random.Generator, level: int=1, wall_obstacles: bool=False) -> str:
+def policy(obs: np.ndarray, rng: np.random.Generator) -> str:
     """Standardized policy function called by evaluate.py / Codabench"""
-    _load_once(level, wall_obstacles)
+    _load_once()
 
     x = torch.from_numpy(obs.astype(np.float32)).unsqueeze(0)
 

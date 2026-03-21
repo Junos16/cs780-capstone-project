@@ -8,6 +8,9 @@ import torch
 from obelix import OBELIX
 
 ACTIONS = ["L45", "L22", "FW", "R22", "R45"]
+_CURRENT_LEVEL = 1
+_CURRENT_WALL = False
+_Q_TABLE = None
 STATE_SPACE_SIZE = 2**18
 
 class SarsaLambdaAgent:
@@ -23,6 +26,11 @@ def obs_to_state(obs: np.ndarray) -> int:
     return np.sum(2**np.where(obs > 0)[0])
 
 def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False):
+    global _CURRENT_LEVEL, _CURRENT_WALL, _Q_TABLE
+    _CURRENT_LEVEL = level
+    _CURRENT_WALL = wall_obstacles
+    _Q_TABLE = None
+    
     print("Training SARSA-Lambda agent for level", level, "with wall obstacles", wall_obstacles, "for", episodes, "episodes")
     difficulty = 0 if level == 1 else 1 if level == 2 else 2 if level == 3 else 3
     
@@ -128,15 +136,15 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
 
 _Q_TABLE = None
 
-def _load_once(level: int, wall_obstacles: bool):
+def _load_once():
     global _Q_TABLE
     if _Q_TABLE is None:
-        wpath = f"models/sarsa_lambda_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
+        wpath = f"models/sarsa_lambda_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}_weights.pth"
         _Q_TABLE = torch.load(wpath, map_location="cpu", weights_only=True).numpy()
     return _Q_TABLE
     
-def policy(obs: np.ndarray, rng: np.random.Generator, level: int=1, wall_obstacles: bool=False) -> str:
-    _load_once(level, wall_obstacles)
+def policy(obs: np.ndarray, rng: np.random.Generator) -> str:
+    _load_once()
     stateID = obs_to_state(obs)
     best_action_idx = int(np.argmax(_Q_TABLE[stateID]))
     return ACTIONS[best_action_idx]
