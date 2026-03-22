@@ -1,3 +1,13 @@
+"""
+MODIFICATIONS:
+- Network Initialization: Added Orthogonal Initialization to all Actor/Critic linear layers for stable gradients.
+- Advantage Estimation: Implemented Generalized Advantage Estimation (GAE) with Lambda return scaling.
+- Objective Functions: Added Clipped Surrogate Objective for the policy, Value Function Clipping for the critic, and an Entropy Bonus for improved exploration.
+- Training Stability: Applied Mini-batch Advantage Normalization before each update step to safely scale learning.
+- State Representation: 36 features utilizing 18-dim baseline observations concatenated with 18-dim delta observations (obs - prev_obs).
+- Reward Shaping: Integrated the standard wandering penalty (-2.0), intensity bonus (+5.0), forward momentum (+0.5), and anti-rotation penalty (-0.5).
+- Device Management: Dynamically mounts to CUDA for sweeping and CPU for evaluation calls.
+"""
 from __future__ import annotations
 import os
 import random

@@ -1,3 +1,12 @@
+"""
+MODIFICATIONS:
+- Dueling Architecture: Separated network streams into Value and Advantage estimation.
+- Double Q-Learning (DDQN): Used target network for value evaluation and online network for action selection to prevent overestimation bias.
+- Prioritized Experience Replay (PER): Implemented proportional prioritization with alpha/beta importance sampling weights.
+- State Representation: 36 features comprising the 18-dim raw observation concatenated with an 18-dim delta observation (obs - prev_obs).
+- Reward Shaping: Included wandering penalty (-2.0), intensity bonus (+5.0), forward momentum (+0.5), and anti-rotation penalty (-0.5).
+- Device Management: Automatically routes training to CUDA (if available) while securely loading policy weights to CPU for inference/evaluation.
+"""
 from __future__ import annotations
 import os
 import random
