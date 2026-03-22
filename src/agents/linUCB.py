@@ -153,7 +153,7 @@ def policy(obs: np.ndarray, rng: np.random.Generator) -> str:
     global _PREV_OBS_EVAL
     state = _load_once()
     
-    if _PREV_OBS_EVAL is None:
+    if _PREV_OBS_EVAL is None or np.sum(np.abs(obs - _PREV_OBS_EVAL)) > 5:
         delta_obs = np.zeros_like(obs, dtype=np.float32)
     else:
         delta_obs = (obs - _PREV_OBS_EVAL).astype(np.float32)
