@@ -19,6 +19,7 @@ N_FEATURES = 37
 
 _CURRENT_LEVEL = 1
 _CURRENT_WALL = False
+_CURRENT_PREFIX = None
 _LINUCB_STATE = None
 
 class LinUCBAgent:
@@ -32,10 +33,11 @@ class LinUCBAgent:
             
         self.b = np.zeros((n_actions, n_features, 1), dtype=np.float32)
 
-def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False):
-    global _CURRENT_LEVEL, _CURRENT_WALL, _LINUCB_STATE
+def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False, prefix: str = None):
+    global _CURRENT_LEVEL, _CURRENT_WALL, _CURRENT_PREFIX, _LINUCB_STATE
     _CURRENT_LEVEL = level
     _CURRENT_WALL = wall_obstacles
+    _CURRENT_PREFIX = prefix
     _LINUCB_STATE = None
     
     print("Training LinUCB agent for level", level, "with wall obstacles", wall_obstacles, "for", episodes, "episodes")
@@ -126,7 +128,8 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
         print(f"Episode {episode+1}/{episodes} return={episode_return:.1f} ({duration:.2f}s)")
     
     os.makedirs("models", exist_ok=True)
-    out_path = f"models/linUCB_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
+    base_name = f"{prefix}" if prefix else f"linUCB_level{level}{'_wall' if wall_obstacles else ''}"
+    out_path = f"models/{base_name}_weights.pth"
     
     state_dict = {
         "A": torch.from_numpy(agent.A),
@@ -141,7 +144,8 @@ _PREV_OBS_EVAL = None
 def _load_once():
     global _LINUCB_STATE
     if _LINUCB_STATE is None:
-        wpath = f"models/linUCB_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}_weights.pth"
+        base_name = f"{_CURRENT_PREFIX}" if _CURRENT_PREFIX else f"linUCB_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}"
+        wpath = f"models/{base_name}_weights.pth"
         loaded = torch.load(wpath, map_location="cpu", weights_only=True)
         _LINUCB_STATE = {
             "A": loaded["A"].numpy(),

@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from src.obelix import OBELIX
+from obelix import OBELIX
 
 ACTIONS = ["L45", "L22", "FW", "R22", "R45"]
 _CURRENT_LEVEL = 1
@@ -57,13 +57,14 @@ class Replay:
 
 import json
 
-def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False):
+def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False, prefix: str = None):
     """
     Standardized train function called by src/main.py
     """
-    global _CURRENT_LEVEL, _CURRENT_WALL, _MODEL
+    global _CURRENT_LEVEL, _CURRENT_WALL, _CURRENT_PREFIX, _MODEL
     _CURRENT_LEVEL = level
     _CURRENT_WALL = wall_obstacles
+    _CURRENT_PREFIX = prefix
     _MODEL = None
     
     difficulty = 0 if level == 1 else 2 if level == 2 else 3
@@ -188,7 +189,8 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
             print(f"Episode {ep+1}/{episodes} return={ep_ret:.1f} eps={eps_by_step(steps):.3f} replay={len(replay)}")
 
     os.makedirs("models", exist_ok=True)
-    out_path = f"models/ddqn_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
+    base_name = f"{prefix}" if prefix else f"ddqn_level{level}{'_wall' if wall_obstacles else ''}"
+    out_path = f"models/{base_name}_weights.pth"
     torch.save(q.state_dict(), out_path)
     print(f"Training complete! Model saved to {out_path}")
 
@@ -200,9 +202,9 @@ def _load_once():
     if _MODEL is not None:
         return
 
-    # Look for weights using the standard naming convention set by our train logic above
-    # Note: For Codabench submissions, this logic needs to be simplified to just target 'weights.pth'
-    wpath = f"models/ddqn_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}_weights.pth"
+    # Default to standard name or prefix name if swept
+    base_name = f"{_CURRENT_PREFIX}" if _CURRENT_PREFIX else f"ddqn_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}"
+    wpath = f"models/{base_name}_weights.pth"
 
     if not os.path.exists(wpath):
         raise FileNotFoundError(f"Missing weights file at {wpath}. Train the agent first.")

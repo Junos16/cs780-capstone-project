@@ -12,20 +12,21 @@ RENDER ?= ""
 WALL_FLAG = $(if $(filter-out "",$(WALL)),--wall,)
 CONFIG_FLAG = $(if $(filter-out "",$(CONFIG)),--config $(CONFIG),)
 RENDER_FLAG = $(if $(filter-out "",$(RENDER)),--render,)
+PREFIX_FLAG = $(if $(filter-out "",$(PREFIX)),--prefix $(PREFIX),)
 
 .PHONY: sweep train eval submit help
 
 ## Sweep an agent
 sweep:
-	uv run src/main.py sweep --agent $(AGENT) --level $(LEVEL) --episodes $(EPISODES) --trials $(TRIALS) $(WALL_FLAG) $(RENDER_FLAG)
+	uv run src/main.py sweep --agent $(AGENT) --level $(LEVEL) --episodes $(EPISODES) --trials $(TRIALS) $(WALL_FLAG) $(RENDER_FLAG) $(PREFIX_FLAG)
 
 ## Train an agent
 train:
-	uv run src/main.py train --agent $(AGENT) --level $(LEVEL) --episodes $(EPISODES) $(WALL_FLAG) $(CONFIG_FLAG) $(RENDER_FLAG)
+	uv run src/main.py train --agent $(AGENT) --level $(LEVEL) --episodes $(EPISODES) $(WALL_FLAG) $(CONFIG_FLAG) $(RENDER_FLAG) $(PREFIX_FLAG)
 
 ## Evaluate a submission
 eval:
-	uv run src/main.py eval --submission $(SUBMISSION) --level $(LEVEL) --episodes $(EPISODES) $(WALL_FLAG)
+	uv run src/main.py eval --submission $(SUBMISSION) --level $(LEVEL) --episodes $(EPISODES) $(WALL_FLAG) $(RENDER_FLAG) $(PREFIX_FLAG)
 
 ## Package a submission into a zip file
 submit:
@@ -35,14 +36,14 @@ submit:
 
 help:
 	@echo "Usage:"
-	@echo "  make sweep [AGENT=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1] [TRIALS=N] [RENDER=1]"
-	@echo "    Example: make sweep AGENT=sarsa_lambda LEVEL=1 EPISODES=300 TRIALS=30 WALL=1 RENDER=1"
+	@echo "  make sweep [AGENT=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1] [TRIALS=N] [RENDER=1] [PREFIX=name]"
+	@echo "    Example: make sweep AGENT=sarsa_lambda LEVEL=1 EPISODES=300 TRIALS=30 WALL=1 RENDER=1 PREFIX=my_sweep"
 	@echo ""
-	@echo "  make train [AGENT=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1] [CONFIG=path/to/json] [RENDER=1]"
-	@echo "    Example: make train AGENT=ddqn LEVEL=2 EPISODES=1000 CONFIG=submissions/configs/1.ddqn_provided_sample.json RENDER=1"
+	@echo "  make train [AGENT=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1] [CONFIG=path/to/json] [RENDER=1] [PREFIX=name]"
+	@echo "    Example: make train AGENT=ddqn LEVEL=2 EPISODES=1000 CONFIG=submissions/configs/1.ddqn_provided_sample.json RENDER=1 PREFIX=my_train"
 	@echo ""
-	@echo "  make eval [SUBMISSION=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1]"
-	@echo "    Example: make eval SUBMISSION=1.ddqn_provided_sample LEVEL=1 EPISODES=10"
+	@echo "  make eval [SUBMISSION=name] [LEVEL=1|2|3] [EPISODES=N] [WALL=1] [RENDER=1] [PREFIX=name]"
+	@echo "    Example: make eval SUBMISSION=1.ddqn_provided_sample LEVEL=1 EPISODES=10 RENDER=1 PREFIX=my_eval"
 	@echo ""
 	@echo "  make submit [SUBMISSION=name]"
 	@echo "    Example: make submit SUBMISSION=1.ddqn_provided_sample"

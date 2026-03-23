@@ -19,6 +19,7 @@ from obelix import OBELIX
 ACTIONS = ["L45", "L22", "FW", "R22", "R45"]
 _CURRENT_LEVEL = 1
 _CURRENT_WALL = False
+_CURRENT_PREFIX = None
 _Q_TABLE = None
 STATE_SPACE_SIZE = 2**18
 
@@ -31,10 +32,11 @@ class DynaQAgent:
 def obs_to_state(obs: np.ndarray) -> int:
     return np.sum(2**np.where(obs > 0)[0])
 
-def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False):
-    global _CURRENT_LEVEL, _CURRENT_WALL, _Q_TABLE
+def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = None, render: bool = False, prefix: str = None):
+    global _CURRENT_LEVEL, _CURRENT_WALL, _CURRENT_PREFIX, _Q_TABLE
     _CURRENT_LEVEL = level
     _CURRENT_WALL = wall_obstacles
+    _CURRENT_PREFIX = prefix
     _Q_TABLE = None
     
     print("Training Dyna-Q agent for level", level, "with wall obstacles", wall_obstacles, "for", episodes, "episodes")
@@ -160,7 +162,8 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
         print(f"Episode {episode+1}/{episodes} return={episode_return:.1f} eps={epsilon:.3f} ({duration:.2f}s)")
     
     os.makedirs("models", exist_ok=True)
-    out_path = f"models/dyna_q_level{level}{'_wall' if wall_obstacles else ''}_weights.pth"
+    base_name = f"{prefix}" if prefix else f"dyna_q_level{level}{'_wall' if wall_obstacles else ''}"
+    out_path = f"models/{base_name}_weights.pth"
     torch.save(torch.from_numpy(agent.q_table), out_path)
     print(f"Saved Q-table to {out_path}")
 
@@ -169,7 +172,8 @@ _Q_TABLE = None
 def _load_once():
     global _Q_TABLE
     if _Q_TABLE is None:
-        wpath = f"models/dyna_q_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}_weights.pth"
+        base_name = f"{_CURRENT_PREFIX}" if _CURRENT_PREFIX else f"dyna_q_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}"
+        wpath = f"models/{base_name}_weights.pth"
         _Q_TABLE = torch.load(wpath, map_location="cpu", weights_only=True).numpy()
     return _Q_TABLE
     

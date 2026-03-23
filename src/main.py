@@ -16,6 +16,7 @@ def load_agent_module(agent_name: str):
         
     spec = importlib.util.spec_from_file_location(agent_name, agent_path)
     module = importlib.util.module_from_spec(spec)
+    sys.modules[agent_name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -31,6 +32,7 @@ def load_submission_module(submission_dir: str):
         
     spec = importlib.util.spec_from_file_location(f"submission_{submission_dir}", agent_path)
     module = importlib.util.module_from_spec(spec)
+    sys.modules[f"submission_{submission_dir}"] = module
     spec.loader.exec_module(module)
     return module
 
@@ -53,7 +55,8 @@ def sweep_agent(args):
         wall_obstacles=args.wall,
         episodes=args.episodes,
         n_trials=args.trials,
-        render=args.render
+        render=args.render,
+        prefix=args.prefix
     )
 
 def train_agent(args):
@@ -62,7 +65,7 @@ def train_agent(args):
     
     if hasattr(agent_mod, "train"):
         # We expect the agent module to have a train() function
-        agent_mod.train(level=args.level, wall_obstacles=args.wall, episodes=args.episodes, config_file=args.config, render=args.render)
+        agent_mod.train(level=args.level, wall_obstacles=args.wall, episodes=args.episodes, config_file=args.config, render=args.render, prefix=args.prefix)
     else:
         print(f"Error: {args.agent}.py does not define a 'train' function.")
         print("Please implement 'def train(level, wall_obstacles, episodes):' in your agent file.")
@@ -89,6 +92,7 @@ def eval_agent(args):
         wall_obstacles=args.wall,
         difficulty=0 if args.level == 1 else 2 if args.level == 2 else 3,
         box_speed=2,
+        render=args.render,
     )
     
     print(
@@ -101,8 +105,12 @@ def eval_agent(args):
     print(f"Appended results to {leaderboard_csv}")
     
     # Also save individual evaluation result to JSON for consistency
-    wall_suffix = "_wall" if args.wall else ""
-    eval_json_path = f"models/{args.submission}_level{args.level}{wall_suffix}_eval_results.json"
+    if args.prefix:
+        eval_json_path = f"models/{args.prefix}_eval_results.json"
+    else:
+        wall_suffix = "_wall" if args.wall else ""
+        eval_json_path = f"models/{args.submission}_level{args.level}{wall_suffix}_eval_results.json"
+    
     eval_data = {
         "agent": args.submission,
         "level": args.level,
@@ -127,6 +135,7 @@ def main():
     sweep_parser.add_argument("--episodes", type=int, default=300, help="Number of episodes per trial")
     sweep_parser.add_argument("--trials", type=int, default=30, help="Number of Optuna trials to run")
     sweep_parser.add_argument("--render", action="store_true", help="Render the environment during the sweep")
+    sweep_parser.add_argument("--prefix", type=str, default=None, help="Prefix for all output files")
 
     # Training parser
     train_parser = subparsers.add_parser("train", help="Train an RL agent")
@@ -136,6 +145,7 @@ def main():
     train_parser.add_argument("--episodes", type=int, default=1000, help="Number of episodes to train")
     train_parser.add_argument("--config", type=str, default=None, help="Path to config JSON file (e.g., submissions/configs/...)")
     train_parser.add_argument("--render", action="store_true", help="Render the environment during training")
+    train_parser.add_argument("--prefix", type=str, default=None, help="Prefix for all output files")
 
     # Evaluation parser
     eval_parser = subparsers.add_parser("eval", help="Evaluate a packaged submission")
@@ -143,6 +153,8 @@ def main():
     eval_parser.add_argument("--level", type=int, choices=[1, 2, 3], default=1, help="Difficulty level")
     eval_parser.add_argument("--wall", action="store_true", help="Enable the static wall obstacle")
     eval_parser.add_argument("--episodes", type=int, default=10, help="Number of runs to average score over")
+    eval_parser.add_argument("--render", action="store_true", help="Render the environment during evaluation")
+    eval_parser.add_argument("--prefix", type=str, default=None, help="Prefix for output evaluation results file")
 
     args = parser.parse_args()
 

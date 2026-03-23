@@ -26,6 +26,8 @@ from obelix import OBELIX
 ACTIONS = ["L45", "L22", "FW", "R22", "R45"]
 _CURRENT_LEVEL = 1
 _CURRENT_WALL = False
+_CURRENT_TRIAL = None
+_CURRENT_PREFIX = None
 _MODEL = None
 _PREV_OBS_EVAL = None
 
@@ -64,10 +66,12 @@ class PPOActorCritic(nn.Module):
             action = probs.sample()
         return action, probs.log_prob(action), probs.entropy(), self.critic(x)
 
-def train(level: int, wall_obstacles: bool, episodes: int, seed: int = None, trial=None, config_file: str = None, render: bool = False):
-    global _CURRENT_LEVEL, _CURRENT_WALL, _MODEL
+def train(level: int, wall_obstacles: bool, episodes: int, seed: int = None, trial=None, config_file: str = None, render: bool = False, prefix: str = None):
+    global _CURRENT_LEVEL, _CURRENT_WALL, _CURRENT_TRIAL, _CURRENT_PREFIX, _MODEL
     _CURRENT_LEVEL = level
     _CURRENT_WALL = wall_obstacles
+    _CURRENT_TRIAL = trial.number if trial is not None else None
+    _CURRENT_PREFIX = prefix
     _MODEL = None
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -255,7 +259,8 @@ def train(level: int, wall_obstacles: bool, episodes: int, seed: int = None, tri
 
     os.makedirs("models", exist_ok=True)
     suffix = f"_trial{trial.number}" if trial else ""
-    out_path = f"models/ppo_level{level}{'_wall' if wall_obstacles else ''}{suffix}_weights.pth"
+    base_name = f"{prefix}" if prefix else f"ppo_level{level}{'_wall' if wall_obstacles else ''}"
+    out_path = f"models/{base_name}{suffix}_weights.pth"
     torch.save(agent.state_dict(), out_path)
     print(f"Training complete! Model saved to {out_path}")
     
@@ -265,7 +270,9 @@ def _load_once():
     global _MODEL
     if _MODEL is not None: return
 
-    wpath = f"models/ppo_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}_weights.pth"
+    base_name = f"{_CURRENT_PREFIX}" if _CURRENT_PREFIX else f"ppo_level{_CURRENT_LEVEL}{'_wall' if _CURRENT_WALL else ''}"
+    suffix = f"_trial{_CURRENT_TRIAL}" if _CURRENT_TRIAL is not None else ""
+    wpath = f"models/{base_name}{suffix}_weights.pth"
     if not os.path.exists(wpath):
         raise FileNotFoundError(f"Missing weights file at {wpath}.")
 

@@ -34,6 +34,7 @@ def load_agent_module(path: str) -> ModuleType:
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load agent module from: {path}")
     module = importlib.util.module_from_spec(spec)
+    sys.modules["submitted_agent"] = module
     spec.loader.exec_module(module)
     return module
 
@@ -50,6 +51,7 @@ def evaluate_agent(
     wall_obstacles: bool,
     difficulty: int,
     box_speed: int,
+    render: bool = False,
 ) -> EvalResult:
     scores: List[float] = []
 
@@ -72,7 +74,7 @@ def evaluate_agent(
         done = False
         while not done:
             action = agent_policy(obs, rng)
-            obs, reward, done = env.step(action, render=False)
+            obs, reward, done = env.step(action, render=render)
             total += float(reward)
 
         scores.append(total)

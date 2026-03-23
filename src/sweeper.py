@@ -7,7 +7,7 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 from evaluate import evaluate_agent
 
-def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episodes, n_trials, render=False):
+def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episodes, n_trials, render=False, prefix=None):
     os.makedirs("models", exist_ok=True)
     os.makedirs("submissions/configs/temp", exist_ok=True)
 
@@ -25,7 +25,8 @@ def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episo
             wall_obstacles=wall_obstacles, 
             episodes=episodes, 
             config_file=config_path,
-            render=render
+            render=render,
+            prefix=prefix
         )
         
         # Evaluate
@@ -51,14 +52,15 @@ def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episo
         return eval_result.mean_score
 
     wall_suffix = "_wall" if wall_obstacles else ""
-    db_file = f"{agent_name}_level{level}{wall_suffix}_sweep.db"
+    base_name = prefix if prefix else f"{agent_name}_level{level}{wall_suffix}"
+    db_file = f"{base_name}_sweep.db"
     db_abs_path = os.path.abspath(os.path.join("models", db_file))
     db_path = f"sqlite:///{db_abs_path}"
     
     print(f"Using Optuna database at: {db_abs_path}")
     
     study = optuna.create_study(
-        study_name=f"{agent_name}_level{level}", 
+        study_name=base_name, 
         storage=db_path, 
         load_if_exists=True,
         direction="maximize"
@@ -69,13 +71,12 @@ def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episo
     wall_suffix = "_wall" if wall_obstacles else ""
     
     # 1. Save the single best hyperparameters
-    best_path = f"models/{agent_name}_level{level}{wall_suffix}_best_params.json"
-    binary_best_path = f"models/{agent_name}_level{level}{wall_suffix}_best_params.json" # keeping same name for compatibility
+    best_path = f"models/{base_name}_best_params.json"
     with open(best_path, "w") as f:
         json.dump(study.best_trial.params, f, indent=4)
         
     # 2. Save the top 4 hyperparameter configurations
-    top_path = f"models/{agent_name}_level{level}{wall_suffix}_top4_params.json"
+    top_path = f"models/{base_name}_top4_params.json"
     
     # Get all completed trials, sorted by value (maximize)
     completed_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
