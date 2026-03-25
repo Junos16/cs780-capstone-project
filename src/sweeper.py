@@ -75,24 +75,14 @@ def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episo
     with open(best_path, "w") as f:
         json.dump(study.best_trial.params, f, indent=4)
         
-    # 2. Save the top 4 hyperparameter configurations
-    top_path = f"models/{base_name}_top4_params.json"
-    
-    # Get all completed trials, sorted by value (maximize)
+    # 2. Save the top 4 hyperparameter configurations as individual files
     completed_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
     sorted_trials = sorted(completed_trials, key=lambda t: t.value if t.value is not None else -float('inf'), reverse=True)
     
-    top_4_configs = []
     for i, trial in enumerate(sorted_trials[:4]):
-        top_4_configs.append({
-            "rank": i + 1,
-            "trial_number": trial.number,
-            "score": trial.value,
-            "params": trial.params
-        })
-        
-    with open(top_path, "w") as f:
-        json.dump(top_4_configs, f, indent=4)
+        config_path = f"models/{base_name}_config_{i + 1}.json"
+        with open(config_path, "w") as f:
+            json.dump(trial.params, f, indent=4)
+        print(f"  Config #{i + 1} (trial {trial.number}, score {trial.value:.2f}) -> {config_path}")
         
     print(f"Sweep complete. Best params saved to {best_path}")
-    print(f"Top 4 configs saved to {top_path}")
