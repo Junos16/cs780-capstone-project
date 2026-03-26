@@ -16,6 +16,10 @@ def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episo
         params = get_params_fn(trial, episodes)
         
         config_path = f"submissions/configs/temp/{agent_name}_trial_{trial.number}.json"
+        
+        # Ensure the nested directories (e.g. 'phase_2') exist within temp
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        
         with open(config_path, "w") as f:
             json.dump(params, f)
             
