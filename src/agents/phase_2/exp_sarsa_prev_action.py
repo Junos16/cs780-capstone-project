@@ -22,6 +22,11 @@ _CURRENT_PREFIX = None
 _Q_TABLE = None
 STATE_SPACE_SIZE = (2**18) * 5
 
+_repeat_count: int = 0
+_MAX_REPEAT = 2
+_CLOSE_Q_DELTA = 0.05
+_last_action: Optional[int] = None
+
 class ExpSarsaAgent:
     def __init__(self, n_actions=5):
         self.q_table = np.zeros((STATE_SPACE_SIZE, n_actions), dtype=np.float32)
@@ -141,7 +146,10 @@ def train(level: int, wall_obstacles: bool, episodes: int, config_file: str = No
     
     os.makedirs("models", exist_ok=True)
     base_name = f"{prefix}" if prefix else f"exp_sarsa_prev_action_level{level}{'_wall' if wall_obstacles else ''}"
-    out_path = f"models/{base_name}_weights.pth"
+    out_path = f"models/{base_name}_trial_{trial.number}_weights.pth" if trial is not None else f"models/{base_name}_weights.pth"
+    
+    global _Q_TABLE
+    _Q_TABLE = agent.q_table
     torch.save(torch.from_numpy(agent.q_table), out_path)
     print(f"Saved Q-table to {out_path}")
 
@@ -154,8 +162,29 @@ def _load_once():
     return _Q_TABLE
     
 def policy(obs: np.ndarray, rng: np.random.Generator) -> str:
-    # Just deferring to inference logic from _infer script for consistency if evaluating here
-    pass
+    global _last_action, _repeat_count
+    _load_once()
+    
+    last_act = 2 if _last_action is None else _last_action
+    stateID = obs_to_state(obs, last_act)
+
+    q_vals = _Q_TABLE[stateID]
+    order = np.argsort(-q_vals)
+    best = int(order[0])
+
+    if _last_action is not None:
+        best_q, second_q = float(q_vals[order[0]]), float(q_vals[order[1]])
+        if (best_q - second_q) < _CLOSE_Q_DELTA:
+            if _repeat_count < _MAX_REPEAT:
+                best = _last_action
+                _repeat_count += 1
+            else:
+                _repeat_count = 0
+        else:
+            _repeat_count = 0
+
+    _last_action = best
+    return ACTIONS[best]
 
 def get_optuna_params(trial, total_episodes):
     params = {}

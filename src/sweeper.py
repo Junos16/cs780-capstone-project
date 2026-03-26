@@ -53,6 +53,13 @@ def run_sweep(agent_name, agent_mod, get_params_fn, level, wall_obstacles, episo
         if os.path.exists(config_path):
             os.remove(config_path)
             
+        # Clean up temporary trial weights to prevent disk littering
+        agent_basename = agent_name.split('/')[-1]
+        weight_base_name = f"{prefix}" if prefix else f"{agent_basename}_level{level}{'_wall' if wall_obstacles else ''}"
+        weight_path = f"models/{weight_base_name}_trial_{trial.number}_weights.pth"
+        if os.path.exists(weight_path):
+            os.remove(weight_path)
+            
         print(f"Trial {trial.number} finished. Mean Reward: {eval_result.mean_score:.2f}")
         return eval_result.mean_score
 
