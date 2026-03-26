@@ -5,14 +5,15 @@ import numpy as np
 import torch
 
 ACTIONS: List[str] = ["L45", "L22", "FW", "R22", "R45"]
-STATE_SPACE_SIZE = (2**18) * 5
+STATE_SPACE_SIZE = (2**18) * 2
 
-def obs_to_state(obs: np.ndarray, last_action: int) -> int:
+def obs_to_state(obs: np.ndarray, target_lock: int) -> int:
     base_state = int(np.sum(2**np.where(obs > 0)[0]))
-    return base_state * 5 + last_action
+    return base_state * 2 + target_lock
 
 _Q_TABLE: Optional[np.ndarray] = None
 _last_action: Optional[int] = None
+_lock_timer: int = 0
 
 _repeat_count: int = 0
 _MAX_REPEAT = 2
@@ -34,12 +35,16 @@ def _load_once():
     _Q_TABLE = torch.load(wpath, map_location="cpu", weights_only=True).numpy()
 
 def policy(obs: np.ndarray, rng: np.random.Generator) -> str:
-    global _last_action, _repeat_count
+    global _last_action, _repeat_count, _lock_timer
     _load_once()
     
-    # Default to Forward (2) if it's the very first step
-    last_act = 2 if _last_action is None else _last_action
-    stateID = obs_to_state(obs, last_act)
+    if np.any(obs[:17] > 0):
+        _lock_timer = 30
+    else:
+        _lock_timer = max(0, _lock_timer - 1)
+        
+    target_lock = 1 if _lock_timer > 0 else 0
+    stateID = obs_to_state(obs, target_lock)
     
     q_vals = _Q_TABLE[stateID]
     
