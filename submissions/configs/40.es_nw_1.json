@@ -1,0 +1,10 @@
+{
+	"pop_size": 30,
+	"elite_fraction": 0.2,
+	"mutation_power": 0.1,
+	"seed": 42,
+	"max_steps": 1000,
+	"scaling_factor": 5,
+	"arena_size": 500,
+	"box_speed": 2
+}
