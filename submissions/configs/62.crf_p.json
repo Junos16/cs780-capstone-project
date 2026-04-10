@@ -1,0 +1,10 @@
+{
+    "lr": 0.0003,
+    "gamma": 0.99,
+    "warmstart_lr_factor": 0.5,
+    "use_privileged": true,
+    "_recommended_episodes": 3000,
+    "_recommended_level": 3,
+    "_note": "episodes=3000 is the TOTAL budget split across all stages by _split_budget. Hardest stages get proportionally more episodes.",
+    "_cli": "make train AGENT=phase_4/curriculum_reinforce LEVEL=3 EPISODES=3000 CONFIG=submissions/configs/62.crf_p.json"
+}

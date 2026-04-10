@@ -1,0 +1,10 @@
+{
+    "sigma0": 0.5,
+    "pop_size": 48,
+    "n_rollouts": 3,
+    "use_privileged": true,
+    "_recommended_episodes": 300,
+    "_recommended_level": 2,
+    "_note": "episodes=300 here means 300 CMA-ES generations. Each generation evaluates pop_size=48 candidates x n_rollouts=3 = 144 rollouts.",
+    "_cli": "make train AGENT=phase_4/cma_es LEVEL=2 EPISODES=300 CONFIG=submissions/configs/64.cma_p.json"
+}

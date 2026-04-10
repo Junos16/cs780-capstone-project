@@ -1,0 +1,12 @@
+{
+    "bc_demo_path": "data/bc_demos.npz",
+    "bc_epochs": 100,
+    "bc_lr": 0.001,
+    "lr": 0.0001,
+    "gamma": 0.99,
+    "use_privileged": true,
+    "_recommended_episodes": 3000,
+    "_recommended_level": 2,
+    "_note": "Lower RL lr (1e-4 vs 3e-4 default) to avoid gradient updates overwriting BC initialization too quickly. BC phase is fast (~seconds for 200 demos).",
+    "_cli": "make train AGENT=phase_4/bc_reinforce LEVEL=2 EPISODES=3000 CONFIG=submissions/configs/58.bcrf_p.json"
+}

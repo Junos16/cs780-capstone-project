@@ -1,0 +1,9 @@
+{
+    "lr": 0.0003,
+    "gamma": 0.995,
+    "use_privileged": false,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_note": "Slightly higher gamma compensates for weaker reward signal without privileged shaping. Risk: all-silent penalty may train wall-hugging at difficulty 2+.",
+    "_cli": "make train AGENT=phase_4/reinforce LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/49.rf_np.json"
+}

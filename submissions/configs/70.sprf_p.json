@@ -1,0 +1,9 @@
+{
+    "lr": 0.0003,
+    "gamma": 0.99,
+    "use_privileged": true,
+    "_recommended_episodes": 3000,
+    "_recommended_level": 3,
+    "_prereq": "Run sp_encoder first: make train AGENT=phase_4/sp_encoder LEVEL=3 EPISODES=200 to produce models/sp_encoder_level3.pth",
+    "_cli": "make train AGENT=phase_4/sp_reinforce LEVEL=3 EPISODES=3000 CONFIG=submissions/configs/70.sprf_p.json"
+}

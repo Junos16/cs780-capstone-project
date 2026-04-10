@@ -1,0 +1,10 @@
+{
+    "sigma0": 0.5,
+    "pop_size": 64,
+    "n_rollouts": 5,
+    "use_privileged": false,
+    "_recommended_episodes": 300,
+    "_recommended_level": 2,
+    "_note": "Larger pop (64) and more rollouts (5) for npriv: fitness landscape is noisier without distance shaping so more samples per generation reduces ranking errors.",
+    "_cli": "make train AGENT=phase_4/cma_es LEVEL=2 EPISODES=300 CONFIG=submissions/configs/65.cma_np.json"
+}

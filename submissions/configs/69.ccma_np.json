@@ -1,0 +1,15 @@
+{
+    "sigma0": 0.5,
+    "sigma_warmstart": 0.3,
+    "sigma_restart": 0.3,
+    "pop_size": 48,
+    "n_rollouts": 4,
+    "review_rollouts": 2,
+    "blend_weight": 0.4,
+    "stagnation_limit": 15,
+    "use_privileged": false,
+    "_recommended_episodes": 500,
+    "_recommended_level": 3,
+    "_note": "More review_rollouts and higher blend_weight for npriv to reduce catastrophic forgetting (no distance signal makes earlier-stage behaviors harder to retain).",
+    "_cli": "make train AGENT=phase_4/curriculum_cma LEVEL=3 EPISODES=500 CONFIG=submissions/configs/69.ccma_np.json"
+}

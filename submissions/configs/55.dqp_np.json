@@ -1,0 +1,16 @@
+{
+    "lr": 0.0001,
+    "gamma": 0.995,
+    "per_alpha": 0.7,
+    "per_beta_start": 0.3,
+    "batch_size": 64,
+    "replay_size": 100000,
+    "target_update": 2000,
+    "warmup_steps": 2000,
+    "eps_decay_frac": 0.6,
+    "use_privileged": false,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_note": "Higher per_alpha (0.7) prioritizes more aggressively to surface rare contact events. Lower beta_start (0.3) since IS correction is less critical early on.",
+    "_cli": "make train AGENT=phase_4/ddqn_per LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/55.dqp_np.json"
+}

@@ -1,0 +1,15 @@
+{
+    "lr": 0.0001,
+    "gamma": 0.99,
+    "n_steps": 8,
+    "batch_size": 64,
+    "replay_size": 50000,
+    "target_update": 1000,
+    "warmup_steps": 1000,
+    "eps_decay_frac": 0.4,
+    "use_privileged": true,
+    "_recommended_episodes": 3000,
+    "_recommended_level": 3,
+    "_prereq": "Run sp_encoder first: make train AGENT=phase_4/sp_encoder LEVEL=3 EPISODES=200",
+    "_cli": "make train AGENT=phase_4/sp_ddqn LEVEL=3 EPISODES=3000 CONFIG=submissions/configs/72.spdq_p.json"
+}

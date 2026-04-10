@@ -1,0 +1,9 @@
+{
+    "lr": 0.0003,
+    "gamma": 0.995,
+    "n_steps": 10,
+    "use_privileged": false,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_cli": "make train AGENT=phase_4/reinforce_nstep LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/51.rfns_np.json"
+}

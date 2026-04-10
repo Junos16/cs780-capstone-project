@@ -1,13 +1,44 @@
 """
-MODIFICATIONS:
-- Base Algorithm: CMA-ES (Covariance Matrix Adaptation Evolution Strategy).
-- Policy: Small MLP neural network (26 → 32 → 16 → 5) with tanh activations.
-- Privileged Fitness: Uses env.bot_center_x/y, env.box_center_x/y, env.enable_push
-  during training for distance-based reward shaping. Inference sees only the 18-bit obs.
-- Augmented Features: Raw 18-bit obs + sensor group sums + temporal memory
-  (time_since_seen, time_since_stuck) + last_action_was_forward.
-- CMA-ES: Full (μ/μ_w, λ)-CMA-ES with step-size adaptation (CSA) and
-  covariance matrix rank-μ + rank-1 updates. Implemented from scratch (no pycma).
+CMA-ES agent for OBELIX — phase 4.
+
+Algorithm:
+  Full (μ/μ_w, λ)-CMA-ES implemented from scratch (no pycma dependency).
+  Improvements over the phase-3 flat evolution strategy:
+    - Rank-1 + rank-μ covariance matrix adaptation tracks the local loss
+      landscape curvature, rotating and scaling the sampling distribution to
+      follow successful search directions.
+    - Cumulative Step-size Adaptation (CSA) automatically adjusts σ so the
+      search neither stagnates nor explodes.
+  Previous phase used tournament selection with fixed σ; this is strictly
+  better on ill-conditioned landscapes.
+
+Policy:
+  26→32→16→5 MLP (tanh), 1477 parameters. Small enough that 48 candidates ×
+  3 rollouts per generation remain fast on CPU; large enough to encode
+  directional sensor logic.
+
+Feature engineering (26-dim):
+  Raw 18-bit obs + 3 sonar group sums (front/left/right) + IR flag + stuck
+  flag + time_since_seen (norm) + time_since_stuck (norm) + last_fw flag.
+  Temporal features give the obs-only policy partial POMDP memory for the
+  blinking-box difficulties.
+
+Reward shaping (obs-only variant, use_privileged=False):
+  +195 when obs[17] (stuck) > 0  — overrides -200 env penalty to net -5.
+  -2   when all 17 sensors silent — penalises open-space circling.
+  +3   when obs[16] (IR) > 0     — rewards physical proximity to box.
+  Limitation: the -2 silent penalty can train wall-hugging at difficulty 2+
+  where the box blinks off. Reduce to -0.5 if wall-hugging is observed.
+
+Reward shaping (privileged variant, use_privileged=True):
+  Above obs-only terms PLUS:
+  +2.0 × (prev_dist - curr_dist)  — dense distance-reduction signal.
+  +0.5 if facing within 45° of box — heading alignment bonus.
+  +1.0/step while enable_push     — sustained push encouragement.
+  Privileged info is available via env internals during training only;
+  inference uses the identical 18-bit obs vector as all other agents.
+
+Fitness: shaped_env_reward + 50 (if ever attached) + 500 (if pushed to wall).
 """
 from __future__ import annotations
 import os
@@ -109,8 +140,37 @@ def _extract_features(obs: np.ndarray,
     return features
 
 
+def _shaped_reward(raw, obs):
+    r = raw
+    if obs[17] > 0:
+        r += 195.0          # override -200 stuck -> -5
+    if float(np.sum(obs[:17])) == 0.0 and obs[17] == 0:
+        r -= 2.0            # penalise open-space circling
+    if obs[16] > 0:
+        r += 3.0            # IR contact proximity bonus
+    return r
+
+
+def _priv_shaping(env, prev_dist):
+    curr_dist = math.sqrt((env.bot_center_x - env.box_center_x)**2 +
+                          (env.bot_center_y - env.box_center_y)**2)
+    r = 0.0
+    if not env.enable_push:
+        r += 2.0 * (prev_dist - curr_dist)
+        dx = env.box_center_x - env.bot_center_x
+        dy = env.box_center_y - env.bot_center_y
+        if abs(dx) + abs(dy) > 1e-3:
+            angle_to_box = math.degrees(math.atan2(dy, dx)) % 360
+            diff = abs(angle_to_box - env.facing_angle % 360)
+            if diff > 180: diff = 360 - diff
+            if diff < 45: r += 0.5
+    else:
+        r += 1.0
+    return r, curr_dist
+
+
 # ---------------------------------------------------------------------------
-# Fitness evaluation (training only – uses privileged env info)
+# Fitness evaluation (training only)
 # ---------------------------------------------------------------------------
 
 def _evaluate_genome(flat_weights: np.ndarray,
@@ -118,22 +178,13 @@ def _evaluate_genome(flat_weights: np.ndarray,
                      wall_obstacles: bool,
                      config: dict,
                      n_rollouts: int = 3) -> float:
-    """Run n_rollouts episodes, return the mean shaped fitness.
-
-    Privileged shaping (only during training):
-      - Per-step distance reduction: +1.5 per pixel closer to box.
-      - Per-step heading alignment: +0.3 when facing within 45° of box.
-      - Attach bonus: +50 on first attachment.
-      - Push-to-boundary bonus: +500 on terminal success.
-    The raw env reward already includes -200 per stuck step, -1 per step,
-    one-time sensor bonuses, +100 attach, and +2000 boundary push.
-    """
     W1, b1, W2, b2, W3, b3 = _unpack_weights(flat_weights)
     seed = config["seed"]
     total_fitness = 0.0
+    use_privileged = config.get("use_privileged", True)
 
     for r in range(n_rollouts):
-        ep_seed = seed + r * 7919  # spread seeds
+        ep_seed = seed + r * 7919
         env = OBELIX(
             scaling_factor=config["scaling_factor"],
             arena_size=config["arena_size"],
@@ -150,10 +201,12 @@ def _evaluate_genome(flat_weights: np.ndarray,
         last_fw = 0.0
 
         env_reward = 0.0
-        distance_shaping = 0.0
-        heading_shaping = 0.0
         attached = False
         pushed_to_boundary = False
+        prev_dist = math.sqrt(
+            (env.bot_center_x - env.box_center_x) ** 2 +
+            (env.bot_center_y - env.box_center_y) ** 2
+        ) if use_privileged else 0.0
 
         # Privileged: current distance to box
         prev_dist = math.sqrt(
@@ -177,32 +230,13 @@ def _evaluate_genome(flat_weights: np.ndarray,
             act_idx = int(np.argmax(logits))
 
             obs, reward, done = env.step(ACTIONS[act_idx], render=False)
-            env_reward += reward
+            r = _shaped_reward(reward, obs)
+            if use_privileged:
+                pr, prev_dist = _priv_shaping(env, prev_dist)
+                r += pr
+            env_reward += r
 
             last_fw = 1.0 if act_idx == 2 else 0.0
-
-            # ----- Per-step privileged shaping -----
-            if not env.enable_push:
-                # Distance shaping: reward getting closer to the box
-                curr_dist = math.sqrt(
-                    (env.bot_center_x - env.box_center_x) ** 2 +
-                    (env.bot_center_y - env.box_center_y) ** 2
-                )
-                delta_dist = prev_dist - curr_dist  # positive = got closer
-                distance_shaping += 1.5 * delta_dist
-                prev_dist = curr_dist
-
-                # Heading shaping: reward facing toward the box
-                dx = env.box_center_x - env.bot_center_x
-                dy = env.box_center_y - env.bot_center_y
-                if abs(dx) + abs(dy) > 1e-3:
-                    angle_to_box = math.degrees(math.atan2(dy, dx)) % 360
-                    facing = env.facing_angle % 360
-                    angle_diff = abs(angle_to_box - facing)
-                    if angle_diff > 180:
-                        angle_diff = 360 - angle_diff
-                    if angle_diff < 45:
-                        heading_shaping += 0.3
 
             if env.enable_push and not attached:
                 attached = True
@@ -212,10 +246,7 @@ def _evaluate_genome(flat_weights: np.ndarray,
             if done:
                 break
 
-        # Shaped fitness = raw env reward + privileged shaping
         fitness = env_reward
-        fitness += distance_shaping
-        fitness += heading_shaping
         fitness += 50.0 if attached else 0.0
         fitness += 500.0 if pushed_to_boundary else 0.0
 
@@ -359,6 +390,7 @@ def train(level: int, wall_obstacles: bool, episodes: int,
         "scaling_factor": 5,
         "arena_size": 500,
         "box_speed": 2,
+        "use_privileged": True,
     }
 
     if config_file and os.path.exists(config_file):

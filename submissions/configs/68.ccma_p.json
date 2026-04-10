@@ -1,0 +1,15 @@
+{
+    "sigma0": 0.5,
+    "sigma_warmstart": 0.3,
+    "sigma_restart": 0.3,
+    "pop_size": 48,
+    "n_rollouts": 3,
+    "review_rollouts": 1,
+    "blend_weight": 0.3,
+    "stagnation_limit": 20,
+    "use_privileged": true,
+    "_recommended_episodes": 500,
+    "_recommended_level": 3,
+    "_note": "episodes=500 is TOTAL CMA generations across all 6 stages, split by _split_budget. Harder stages get proportionally more budget.",
+    "_cli": "make train AGENT=phase_4/curriculum_cma LEVEL=3 EPISODES=500 CONFIG=submissions/configs/68.ccma_p.json"
+}

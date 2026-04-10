@@ -1,0 +1,8 @@
+{
+    "encoder_epochs": 100,
+    "encoder_lr": 0.0005,
+    "encoder_batch_size": 256,
+    "data_episodes": 500,
+    "_note": "Trains 144->64->32->10 EncoderNet on privileged belief targets from random rollouts. Run BEFORE any sp_* agent. data_episodes=500 gives ~200K training samples.",
+    "_cli": "make train AGENT=phase_4/sp_encoder LEVEL=3 EPISODES=200 CONFIG=submissions/configs/encoder.json PREFIX=sp_encoder_level3"
+}

@@ -1,0 +1,10 @@
+{
+    "lr": 0.0003,
+    "gamma": 0.995,
+    "warmstart_lr_factor": 0.3,
+    "use_privileged": false,
+    "_recommended_episodes": 3000,
+    "_recommended_level": 3,
+    "_note": "More aggressive lr reduction on stage transition (0.3 vs 0.5) for npriv: without distance shaping the policy is less stable when env changes.",
+    "_cli": "make train AGENT=phase_4/curriculum_reinforce LEVEL=3 EPISODES=3000 CONFIG=submissions/configs/63.crf_np.json"
+}

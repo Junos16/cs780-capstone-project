@@ -1,0 +1,15 @@
+{
+    "lr": 0.0001,
+    "gamma": 0.99,
+    "per_alpha": 0.6,
+    "per_beta_start": 0.4,
+    "batch_size": 64,
+    "replay_size": 50000,
+    "target_update": 1000,
+    "warmup_steps": 1000,
+    "eps_decay_frac": 0.4,
+    "use_privileged": true,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_cli": "make train AGENT=phase_4/ddqn_per LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/54.dqp_p.json"
+}

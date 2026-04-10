@@ -1,0 +1,14 @@
+{
+    "lr": 0.0001,
+    "gamma": 0.99,
+    "batch_size": 64,
+    "replay_size": 50000,
+    "target_update": 1000,
+    "warmup_steps": 1000,
+    "eps_decay_frac": 0.4,
+    "use_privileged": true,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_note": "Faster epsilon decay (0.4) than default (0.5) since privileged shaping provides denser reward signal, supporting earlier exploitation.",
+    "_cli": "make train AGENT=phase_4/ddqn LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/52.dq_p.json"
+}

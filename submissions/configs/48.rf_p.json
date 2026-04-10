@@ -1,0 +1,8 @@
+{
+    "lr": 0.0003,
+    "gamma": 0.99,
+    "use_privileged": true,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_cli": "make train AGENT=phase_4/reinforce LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/48.rf_p.json"
+}

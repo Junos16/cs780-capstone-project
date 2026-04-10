@@ -1,0 +1,13 @@
+{
+    "bc_demo_path": "data/bc_demos.npz",
+    "bc_epochs": 100,
+    "bc_lr": 0.001,
+    "sigma0": 0.3,
+    "pop_size": 48,
+    "n_rollouts": 3,
+    "use_privileged": true,
+    "_recommended_episodes": 200,
+    "_recommended_level": 2,
+    "_note": "sigma0=0.3 (vs 0.5 default) since BC warm-start already places the mean in a good region. Smaller step size stays near BC initialization.",
+    "_cli": "make train AGENT=phase_4/bc_cma LEVEL=2 EPISODES=200 CONFIG=submissions/configs/66.bccma_p.json"
+}

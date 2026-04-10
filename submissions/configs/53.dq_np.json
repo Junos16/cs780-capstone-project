@@ -1,0 +1,14 @@
+{
+    "lr": 0.0001,
+    "gamma": 0.995,
+    "batch_size": 128,
+    "replay_size": 100000,
+    "target_update": 2000,
+    "warmup_steps": 2000,
+    "eps_decay_frac": 0.6,
+    "use_privileged": false,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_note": "Larger batch/replay and slower eps decay for npriv: reward signal is sparser so more diverse experience is needed before exploitation.",
+    "_cli": "make train AGENT=phase_4/ddqn LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/53.dq_np.json"
+}

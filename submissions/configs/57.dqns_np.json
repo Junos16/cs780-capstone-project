@@ -1,0 +1,15 @@
+{
+    "lr": 0.0001,
+    "gamma": 0.995,
+    "n_steps": 5,
+    "batch_size": 64,
+    "replay_size": 100000,
+    "target_update": 2000,
+    "warmup_steps": 2000,
+    "eps_decay_frac": 0.6,
+    "use_privileged": false,
+    "_recommended_episodes": 5000,
+    "_recommended_level": 2,
+    "_note": "Shorter n_steps (5 vs 8) for npriv: bootstrap accuracy degrades faster without dense shaping, so shorter horizon reduces propagation of biased estimates.",
+    "_cli": "make train AGENT=phase_4/ddqn_nstep LEVEL=2 EPISODES=5000 CONFIG=submissions/configs/57.dqns_np.json"
+}

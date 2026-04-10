@@ -1,0 +1,12 @@
+{
+    "bc_demo_path": "data/bc_demos.npz",
+    "bc_epochs": 100,
+    "bc_lr": 0.001,
+    "sigma0": 0.3,
+    "pop_size": 48,
+    "n_rollouts": 5,
+    "use_privileged": false,
+    "_recommended_episodes": 200,
+    "_recommended_level": 2,
+    "_cli": "make train AGENT=phase_4/bc_cma LEVEL=2 EPISODES=200 CONFIG=submissions/configs/67.bccma_np.json"
+}

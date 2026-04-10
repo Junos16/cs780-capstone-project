@@ -1,0 +1,10 @@
+{
+    "sigma0": 0.5,
+    "pop_size": 48,
+    "n_rollouts": 5,
+    "use_privileged": false,
+    "_recommended_episodes": 200,
+    "_recommended_level": 3,
+    "_prereq": "Run sp_encoder first: make train AGENT=phase_4/sp_encoder LEVEL=3 EPISODES=200",
+    "_cli": "make train AGENT=phase_4/sp_cma LEVEL=3 EPISODES=200 CONFIG=submissions/configs/75.spcma_np.json"
+}

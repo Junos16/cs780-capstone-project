@@ -1,0 +1,13 @@
+{
+    "bc_demo_path": "data/bc_demos.npz",
+    "bc_epochs": 100,
+    "bc_lr": 0.001,
+    "lr": 0.0001,
+    "gamma": 0.995,
+    "eps_start": 0.3,
+    "eps_decay_frac": 0.5,
+    "use_privileged": false,
+    "_recommended_episodes": 3000,
+    "_recommended_level": 2,
+    "_cli": "make train AGENT=phase_4/bc_ddqn LEVEL=2 EPISODES=3000 CONFIG=submissions/configs/61.bcdq_np.json"
+}
