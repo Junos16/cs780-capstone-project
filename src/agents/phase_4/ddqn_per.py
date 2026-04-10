@@ -36,6 +36,7 @@ import os
 import json
 import math
 import random
+import time
 from typing import Optional
 
 import numpy as np
@@ -229,6 +230,7 @@ def train(level, wall_obstacles, episodes, config_file=None, render=False, prefi
             seed=ep_seed,
         )
         obs = env.reset(seed=ep_seed)
+        t_ep = time.time()
 
         ts_seen = 100
         ts_stuck = 100
@@ -306,7 +308,7 @@ def train(level, wall_obstacles, episodes, config_file=None, render=False, prefi
         eps_now = max(eps_end, eps_start - (eps_start - eps_end) * total_steps /
                       (episodes * cfg["max_steps"] * eps_decay_frac))
         print(f"Ep {ep+1}/{episodes}  reward={ep_reward:.1f}  "
-              f"rolling10={rolling_mean:.1f}  eps={eps_now:.3f}  steps={total_steps}")
+              f"rolling10={rolling_mean:.1f}  eps={eps_now:.3f}  steps={total_steps}  ({time.time()-t_ep:.1f}s)")
 
         if trial is not None:
             trial.report(rolling_mean, ep)
