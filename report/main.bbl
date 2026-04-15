@@ -1,0 +1,61 @@
+\begin{thebibliography}{10}
+
+\bibitem{kaelbling1998}
+L.~P. Kaelbling, M.~L. Littman, and A.~R. Cassandra, ``Planning and acting in
+  partially observable stochastic domains,'' {\em Artificial Intelligence},
+  vol.~101, no.~1-2, pp.~99--134, 1998.
+
+\bibitem{robbins1978}
+H.~Robbins, ``On the measure of a random set,'' {\em Annals of Mathematical
+  Statistics}, vol.~15, pp.~70--74, 1944.
+\newblock Expected distance between random points: $\mathbb{E}[d] \approx
+  0.521L$ for uniform points in $[0,L]^2$.
+
+\bibitem{sutton2018}
+R.~S. Sutton and A.~G. Barto, {\em Reinforcement Learning: An Introduction}.
+\newblock Cambridge, MA: MIT Press, 2nd~ed., 2018.
+
+\bibitem{rummery1994}
+G.~A. Rummery and M.~Niranjan, ``On-line q-learning using connectionist
+  systems,'' {\em Technical Report CUED/F-INFENG/TR 166}, 1994.
+
+\bibitem{watkins1992}
+C.~J. C.~H. Watkins and P.~Dayan, ``Q-learning,'' {\em Machine Learning},
+  vol.~8, no.~3-4, pp.~279--292, 1992.
+
+\bibitem{sehnke2010}
+F.~Sehnke, C.~Osendorfer, T.~R{\"u}ckstie{\ss}, A.~Graves, J.~Peters, and
+  J.~Schmidhuber, ``Parameter-exploring policy gradients,'' {\em Neural
+  Networks}, vol.~23, no.~4, pp.~551--559, 2010.
+
+\bibitem{williams1992}
+R.~J. Williams, ``Simple statistical gradient-following algorithms for
+  connectionist reinforcement learning,'' {\em Machine Learning}, vol.~8,
+  no.~3-4, pp.~229--256, 1992.
+
+\bibitem{van2016deep}
+H.~van Hasselt, A.~Guez, and D.~Silver, ``Deep reinforcement learning with
+  double q-learning,'' in {\em Proceedings of the AAAI Conference on Artificial
+  Intelligence}, vol.~30, 2016.
+
+\bibitem{schaul2015}
+T.~Schaul, J.~Quan, I.~Antonoglou, and D.~Silver, ``Prioritized experience
+  replay,'' in {\em International Conference on Learning Representations},
+  2016.
+
+\bibitem{hansen2016cma}
+N.~Hansen, ``The {CMA} evolution strategy: A tutorial,'' {\em arXiv preprint
+  arXiv:1604.00772}, 2016.
+
+\bibitem{pomerleau1991}
+D.~A. Pomerleau, ``Efficient training of artificial neural networks for
+  autonomous navigation,'' in {\em Neural Computation}, vol.~3, pp.~88--97,
+  1991.
+
+\bibitem{mnih2015}
+V.~Mnih, K.~Kavukcuoglu, D.~Silver, A.~A. Rusu, J.~Veness, M.~G. Bellemare,
+  A.~Graves, M.~Riedmiller, A.~K. Fidjeland, G.~Ostrovski, {\em et~al.},
+  ``Human-level control through deep reinforcement learning,'' {\em Nature},
+  vol.~518, no.~7540, pp.~529--533, 2015.
+
+\end{thebibliography}
